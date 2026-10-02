@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Home PC Control</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f1117;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #aaa;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #777;
+            border-radius: 50%;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #181b23;
+            border: 1px solid #292d38;
+            border-radius: 14px;
+            padding: 22px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat {
+            background: #10131a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 9px;
+            background: #292e3a;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #383e4d;
+        }
+
+        .danger {
+            background: #5c2525;
+        }
+
+        .danger:hover {
+            background: #773131;
+        }
+
+        .terminal {
+            width: 100%;
+            min-height: 120px;
+            background: #0a0c10;
+            border: 1px solid #292d38;
+            border-radius: 8px;
+            color: #ddd;
+            padding: 12px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        .command-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .command-row input {
+            flex: 1;
+            padding: 12px;
+            background: #0a0c10;
+            border: 1px solid #292d38;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .command-row button {
+            width: 100px;
+            margin-top: 0;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Home PC Control</h1>
+            <div class="status">
+                <span class="dot"></span>
+                <span id="connectionStatus">Connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid">
+
+        <!-- SYSTEM STATUS -->
+
+        <div class="card">
+            <h2>System Status</h2>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-label">CPU</div>
+                    <div class="stat-value" id="cpu">--%</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">RAM</div>
+                    <div class="stat-value" id="ram">--%</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">Disk</div>
+                    <div class="stat-value" id="disk">--%</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">PC</div>
+                    <div class="stat-value" id="pcName">Offline</div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- POWER -->
+
+        <div class="card">
+
+            <h2>Power</h2>
+
+            <button onclick="sendCommand('lock')">
+                🔒 Lock PC
+            </button>
+
+            <button onclick="sendCommand('restart')">
+                🔄 Restart PC
+            </button>
+
+            <button class="danger" onclick="confirmShutdown()">
+                ⏻ Shut Down
+            </button>
+
+        </div>
+
+
+        <!-- APPLICATIONS -->
+
+        <div class="card">
+
+            <h2>Applications</h2>
+
+            <button onclick="sendCommand('open-chrome')">
+                🌐 Open Chrome
+            </button>
+
+            <button onclick="sendCommand('open-steam')">
+                🎮 Open Steam
+            </button>
+
+            <button onclick="sendCommand('task-manager')">
+                📊 Task Manager
+            </button>
+
+        </div>
+
+
+        <!-- COMMAND -->
+
+        <div class="card">
+
+            <h2>Command</h2>
+
+            <div class="command-row">
+
+                <input
+                    id="commandInput"
+                    type="text"
+                    placeholder="Enter command..."
+                >
+
+                <button onclick="executeCommand()">
+                    Run
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- TERMINAL OUTPUT -->
+
+        <div class="card" style="grid-column: 1 / -1;">
+
+            <h2>PC Output</h2>
+
+            <textarea
+                id="output"
+                class="terminal"
+                readonly
+            >Waiting for PC agent...</textarea>
+
+        </div>
+
+    </div>
+
+    <footer>
+        Home PC Control
+    </footer>
+
+</div>
+
+
+<script>
+
+    /*
+     * This is temporarily disabled.
+     *
+     * In a later step we will connect this website
+     * to the secure PC agent running on your Windows PC.
+     */
+
+    let connected = false;
+
+
+    function sendCommand(command) {
+
+        if (!connected) {
+            showOutput(
+                "PC agent is not connected yet.\n\n" +
+                "We're going to set that up next."
+            );
+
+            return;
+        }
+
+        console.log("Command:", command);
+
+        // PC agent connection will go here.
+    }
+
+
+    function executeCommand() {
+
+        const input =
+            document.getElementById("commandInput");
+
+        const command = input.value.trim();
+
+        if (!command) {
+            return;
+        }
+
+        sendCommand(command);
+
+        input.value = "";
+    }
+
+
+    function confirmShutdown() {
+
+        const confirmed =
+            confirm("Are you sure you want to shut down your PC?");
+
+        if (confirmed) {
+            sendCommand("shutdown");
+        }
+    }
+
+
+    function showOutput(message) {
+
+        document.getElementById("output").value = message;
+
+    }
+
+
+    /*
+     * Temporary status.
+     */
+
+    document.getElementById("connectionStatus").textContent =
+        "PC agent not connected";
+
+</script>
+
+</body>
+</html>
