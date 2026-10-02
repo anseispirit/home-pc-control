@@ -19,137 +19,106 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1000px;
             margin: auto;
             padding: 30px 20px;
         }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
         h1 {
-            margin: 0;
-            font-size: 28px;
+            margin-bottom: 5px;
         }
 
-        .status {
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 25px;
+        }
+
+        .panel {
+            background: #181c25;
+            border: 1px solid #292f3b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .connection-row {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #aaa;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .dot {
-            width: 10px;
-            height: 10px;
-            background: #777;
-            border-radius: 50%;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: #181b23;
-            border: 1px solid #292d38;
-            border-radius: 14px;
-            padding: 22px;
-        }
-
-        .card h2 {
-            margin-top: 0;
-            font-size: 18px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .stat {
-            background: #10131a;
-            padding: 15px;
-            border-radius: 10px;
-        }
-
-        .stat-label {
-            color: #888;
-            font-size: 13px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            margin-top: 5px;
+        input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #363d4a;
+            background: #0f1117;
+            color: white;
+            font-size: 15px;
         }
 
         button {
-            width: 100%;
-            padding: 13px;
-            margin-top: 10px;
+            padding: 12px 18px;
             border: none;
-            border-radius: 9px;
-            background: #292e3a;
+            border-radius: 8px;
+            background: #2563eb;
             color: white;
+            font-size: 15px;
             cursor: pointer;
-            font-size: 14px;
         }
 
         button:hover {
-            background: #383e4d;
+            background: #1d4ed8;
         }
 
-        .danger {
-            background: #5c2525;
+        .status-line {
+            margin-top: 15px;
+            font-weight: bold;
         }
 
-        .danger:hover {
-            background: #773131;
+        .offline {
+            color: #ef4444;
         }
 
-        .terminal {
+        .online {
+            color: #22c55e;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: #11151d;
+            border: 1px solid #292f3b;
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .card-title {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        #output {
             width: 100%;
             min-height: 120px;
-            background: #0a0c10;
-            border: 1px solid #292d38;
-            border-radius: 8px;
-            color: #ddd;
-            padding: 12px;
             resize: vertical;
-            font-family: monospace;
-        }
-
-        .command-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .command-row input {
-            flex: 1;
             padding: 12px;
-            background: #0a0c10;
-            border: 1px solid #292d38;
             border-radius: 8px;
-            color: white;
-        }
-
-        .command-row button {
-            width: 100px;
-            margin-top: 0;
-        }
-
-        footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
-            font-size: 13px;
+            border: 1px solid #363d4a;
+            background: #0b0e13;
+            color: #d1d5db;
+            font-family: monospace;
         }
     </style>
 </head>
@@ -158,207 +127,302 @@
 
 <div class="container">
 
-    <header>
-        <div>
-            <h1>Home PC Control</h1>
-            <div class="status">
-                <span class="dot"></span>
-                <span id="connectionStatus">Connecting...</span>
-            </div>
-        </div>
-    </header>
+    <h1>Home PC Control</h1>
 
-    <div class="grid">
-
-        <!-- SYSTEM STATUS -->
-
-        <div class="card">
-            <h2>System Status</h2>
-
-            <div class="stats">
-
-                <div class="stat">
-                    <div class="stat-label">CPU</div>
-                    <div class="stat-value" id="cpu">--%</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-label">RAM</div>
-                    <div class="stat-value" id="ram">--%</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-label">Disk</div>
-                    <div class="stat-value" id="disk">--%</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-label">PC</div>
-                    <div class="stat-value" id="pcName">Offline</div>
-                </div>
-
-            </div>
-        </div>
+    <div class="subtitle">
+        Remote control dashboard
+    </div>
 
 
-        <!-- POWER -->
+    <!-- CONNECTION -->
 
-        <div class="card">
+    <div class="panel">
 
-            <h2>Power</h2>
+        <h2>Connection</h2>
 
-            <button onclick="sendCommand('lock')">
-                🔒 Lock PC
-            </button>
+        <div class="connection-row">
 
-            <button onclick="sendCommand('restart')">
-                🔄 Restart PC
-            </button>
+            <input
+                id="serverUrl"
+                type="text"
+                value="https://democrats-arrangement-newer-cleanup.trycloudflare.com"
+                placeholder="Cloudflare Tunnel URL"
+            >
 
-            <button class="danger" onclick="confirmShutdown()">
-                ⏻ Shut Down
+            <input
+                id="token"
+                type="password"
+                placeholder="PC control token"
+            >
+
+            <button onclick="connectToPC()">
+                Connect
             </button>
 
         </div>
 
-
-        <!-- APPLICATIONS -->
-
-        <div class="card">
-
-            <h2>Applications</h2>
-
-            <button onclick="sendCommand('open-chrome')">
-                🌐 Open Chrome
-            </button>
-
-            <button onclick="sendCommand('open-steam')">
-                🎮 Open Steam
-            </button>
-
-            <button onclick="sendCommand('task-manager')">
-                📊 Task Manager
-            </button>
-
-        </div>
-
-
-        <!-- COMMAND -->
-
-        <div class="card">
-
-            <h2>Command</h2>
-
-            <div class="command-row">
-
-                <input
-                    id="commandInput"
-                    type="text"
-                    placeholder="Enter command..."
-                >
-
-                <button onclick="executeCommand()">
-                    Run
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- TERMINAL OUTPUT -->
-
-        <div class="card" style="grid-column: 1 / -1;">
-
-            <h2>PC Output</h2>
-
-            <textarea
-                id="output"
-                class="terminal"
-                readonly
-            >Waiting for PC agent...</textarea>
-
+        <div id="connectionStatus" class="status-line offline">
+            ● Disconnected
         </div>
 
     </div>
 
-    <footer>
-        Home PC Control
-    </footer>
+
+    <!-- SYSTEM STATUS -->
+
+    <div class="panel">
+
+        <h2>System Status</h2>
+
+        <div class="cards">
+
+            <div class="card">
+                <div class="card-title">Computer</div>
+                <div id="computer" class="card-value">—</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">CPU</div>
+                <div id="cpu" class="card-value">—</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">RAM</div>
+                <div id="ram" class="card-value">—</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Disk</div>
+                <div id="disk" class="card-value">—</div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <button onclick="requestStatus()">
+            Refresh Status
+        </button>
+
+    </div>
+
+
+    <!-- OUTPUT -->
+
+    <div class="panel">
+
+        <h2>Connection Output</h2>
+
+        <textarea
+            id="output"
+            readonly
+            placeholder="Messages from your PC will appear here..."
+        ></textarea>
+
+    </div>
 
 </div>
 
 
 <script>
 
-    /*
-     * This is temporarily disabled.
-     *
-     * In a later step we will connect this website
-     * to the secure PC agent running on your Windows PC.
-     */
-
-    let connected = false;
+let websocket = null;
 
 
-    function sendCommand(command) {
+// --------------------------------------------------
+// CONNECT TO PC
+// --------------------------------------------------
 
-        if (!connected) {
-            showOutput(
-                "PC agent is not connected yet.\n\n" +
-                "We're going to set that up next."
-            );
+function connectToPC() {
 
-            return;
-        }
+    const serverUrl =
+        document.getElementById("serverUrl").value.trim();
 
-        console.log("Command:", command);
+    const token =
+        document.getElementById("token").value.trim();
 
-        // PC agent connection will go here.
+
+    if (!serverUrl) {
+        alert("Enter the Cloudflare Tunnel address.");
+        return;
+    }
+
+    if (!token) {
+        alert("Enter your PC control token.");
+        return;
     }
 
 
-    function executeCommand() {
+    // Convert:
+    // https://example.trycloudflare.com
+    //
+    // into:
+    // wss://example.trycloudflare.com
 
-        const input =
-            document.getElementById("commandInput");
+    const websocketUrl =
+        serverUrl.replace(/^https:/, "wss:").replace(/\/$/, "")
+        + "/ws?token="
+        + encodeURIComponent(token);
 
-        const command = input.value.trim();
 
-        if (!command) {
-            return;
-        }
+    setConnectionStatus("Connecting...", false);
 
-        sendCommand(command);
 
-        input.value = "";
+    try {
+
+        websocket = new WebSocket(websocketUrl);
+
+
+        websocket.onopen = function() {
+
+            setConnectionStatus("Connected", true);
+
+            addOutput("WebSocket connected.");
+
+        };
+
+
+        websocket.onmessage = function(event) {
+
+            addOutput("PC: " + event.data);
+
+            try {
+
+                const data = JSON.parse(event.data);
+
+                if (data.type === "status") {
+
+                    updateStatus(data);
+
+                }
+
+            } catch (error) {
+
+                console.log("Received non-JSON message.");
+
+            }
+
+        };
+
+
+        websocket.onerror = function() {
+
+            addOutput("WebSocket error.");
+
+            setConnectionStatus("Connection error", false);
+
+        };
+
+
+        websocket.onclose = function() {
+
+            addOutput("WebSocket disconnected.");
+
+            setConnectionStatus("Disconnected", false);
+
+        };
+
+    } catch (error) {
+
+        addOutput("Connection failed: " + error);
+
+        setConnectionStatus("Connection failed", false);
+
+    }
+
+}
+
+
+// --------------------------------------------------
+// REQUEST STATUS
+// --------------------------------------------------
+
+function requestStatus() {
+
+    if (!websocket ||
+        websocket.readyState !== WebSocket.OPEN) {
+
+        alert("Connect to your PC first.");
+        return;
     }
 
 
-    function confirmShutdown() {
+    websocket.send(
+        JSON.stringify({
+            action: "status"
+        })
+    );
 
-        const confirmed =
-            confirm("Are you sure you want to shut down your PC?");
-
-        if (confirmed) {
-            sendCommand("shutdown");
-        }
-    }
+}
 
 
-    function showOutput(message) {
+// --------------------------------------------------
+// UPDATE STATUS CARDS
+// --------------------------------------------------
 
-        document.getElementById("output").value = message;
+function updateStatus(data) {
 
-    }
+    document.getElementById("computer").textContent =
+        data.computer || "—";
+
+    document.getElementById("cpu").textContent =
+        data.cpu !== undefined
+            ? data.cpu + "%"
+            : "—";
+
+    document.getElementById("ram").textContent =
+        data.ram !== undefined
+            ? data.ram + "%"
+            : "—";
+
+    document.getElementById("disk").textContent =
+        data.disk !== undefined
+            ? data.disk + "%"
+            : "—";
+
+}
 
 
-    /*
-     * Temporary status.
-     */
+// --------------------------------------------------
+// CONNECTION INDICATOR
+// --------------------------------------------------
 
-    document.getElementById("connectionStatus").textContent =
-        "PC agent not connected";
+function setConnectionStatus(message, connected) {
+
+    const element =
+        document.getElementById("connectionStatus");
+
+    element.textContent =
+        connected
+            ? "● " + message
+            : "● " + message;
+
+    element.className =
+        connected
+            ? "status-line online"
+            : "status-line offline";
+
+}
+
+
+// --------------------------------------------------
+// OUTPUT LOG
+// --------------------------------------------------
+
+function addOutput(message) {
+
+    const output =
+        document.getElementById("output");
+
+    const timestamp =
+        new Date().toLocaleTimeString();
+
+    output.value +=
+        "[" + timestamp + "] " + message + "\n";
+
+    output.scrollTop = output.scrollHeight;
+
+}
 
 </script>
 
