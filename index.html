@@ -1,332 +1,450 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Home PC Control</title>
+<meta charset="UTF-8">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0f1117;
-            color: #ffffff;
-        }
+<title>Home PC Remote Desktop</title>
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 30px 20px;
-        }
+<style>
 
-        h1 {
-            margin-bottom: 5px;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        .subtitle {
-            color: #9ca3af;
-            margin-bottom: 25px;
-        }
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #080a0f;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
 
-        .panel {
-            background: #181c25;
-            border: 1px solid #292f3b;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+#topbar {
 
-        .connection-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+    height: 55px;
 
-        input {
-            flex: 1;
-            min-width: 250px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #363d4a;
-            background: #0f1117;
-            color: white;
-            font-size: 15px;
-        }
+    display: flex;
 
-        button {
-            padding: 12px 18px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-size: 15px;
-            cursor: pointer;
-        }
+    align-items: center;
 
-        button:hover {
-            background: #1d4ed8;
-        }
+    gap: 10px;
 
-        .status-line {
-            margin-top: 15px;
-            font-weight: bold;
-        }
+    padding: 8px 12px;
 
-        .offline {
-            color: #ef4444;
-        }
+    background: #151922;
 
-        .online {
-            color: #22c55e;
-        }
+    border-bottom: 1px solid #2a3040;
+}
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
+#serverUrl {
 
-        .card {
-            background: #11151d;
-            border: 1px solid #292f3b;
-            border-radius: 10px;
-            padding: 18px;
-        }
+    flex: 1;
 
-        .card-title {
-            color: #9ca3af;
-            font-size: 14px;
-        }
+    min-width: 200px;
 
-        .card-value {
-            font-size: 28px;
-            margin-top: 8px;
-            font-weight: bold;
-        }
+    background: #0b0e14;
 
-        #output {
-            width: 100%;
-            min-height: 120px;
-            resize: vertical;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #363d4a;
-            background: #0b0e13;
-            color: #d1d5db;
-            font-family: monospace;
-        }
-    </style>
+    color: white;
+
+    border: 1px solid #303747;
+
+    border-radius: 6px;
+
+    padding: 9px;
+
+}
+
+#token {
+
+    width: 230px;
+
+    background: #0b0e14;
+
+    color: white;
+
+    border: 1px solid #303747;
+
+    border-radius: 6px;
+
+    padding: 9px;
+
+}
+
+button {
+
+    background: #2563eb;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 6px;
+
+    padding: 9px 14px;
+
+    cursor: pointer;
+
+}
+
+button:hover {
+
+    background: #1d4ed8;
+
+}
+
+#status {
+
+    font-size: 13px;
+
+    white-space: nowrap;
+
+}
+
+.disconnected {
+
+    color: #ef4444;
+
+}
+
+.connected {
+
+    color: #22c55e;
+
+}
+
+#viewer {
+
+    width: 100vw;
+
+    height: calc(100vh - 55px);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: #000;
+
+    overflow: hidden;
+
+}
+
+#screen {
+
+    display: block;
+
+    max-width: 100%;
+
+    max-height: 100%;
+
+    width: auto;
+
+    height: auto;
+
+    object-fit: contain;
+
+    user-select: none;
+
+    -webkit-user-drag: none;
+
+    cursor: default;
+
+}
+
+#message {
+
+    position: absolute;
+
+    left: 50%;
+
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    color: #9ca3af;
+
+    font-size: 18px;
+
+    text-align: center;
+
+}
+
+@media (max-width: 700px) {
+
+    #token {
+
+        width: 150px;
+
+    }
+
+    #serverUrl {
+
+        display: none;
+
+    }
+
+}
+
+</style>
+
 </head>
+
 
 <body>
 
-<div class="container">
 
-    <h1>Home PC Control</h1>
+<div id="topbar">
 
-    <div class="subtitle">
-        Remote control dashboard
+    <input
+        id="serverUrl"
+        type="text"
+        value="https://democrats-arrangement-newer-cleanup.trycloudflare.com"
+        placeholder="Cloudflare URL"
+    >
+
+    <input
+        id="token"
+        type="password"
+        placeholder="PC token"
+    >
+
+    <button onclick="connect()">
+        Connect
+    </button>
+
+    <button onclick="disconnect()">
+        Disconnect
+    </button>
+
+    <span
+        id="status"
+        class="disconnected"
+    >
+        ● Disconnected
+    </span>
+
+</div>
+
+
+<div id="viewer">
+
+    <div id="message">
+        Enter your token and click Connect.
     </div>
 
-
-    <!-- CONNECTION -->
-
-    <div class="panel">
-
-        <h2>Connection</h2>
-
-        <div class="connection-row">
-
-            <input
-                id="serverUrl"
-                type="text"
-                value="https://democrats-arrangement-newer-cleanup.trycloudflare.com"
-                placeholder="Cloudflare Tunnel URL"
-            >
-
-            <input
-                id="token"
-                type="password"
-                placeholder="PC control token"
-            >
-
-            <button onclick="connectToPC()">
-                Connect
-            </button>
-
-        </div>
-
-        <div id="connectionStatus" class="status-line offline">
-            ● Disconnected
-        </div>
-
-    </div>
-
-
-    <!-- SYSTEM STATUS -->
-
-    <div class="panel">
-
-        <h2>System Status</h2>
-
-        <div class="cards">
-
-            <div class="card">
-                <div class="card-title">Computer</div>
-                <div id="computer" class="card-value">—</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">CPU</div>
-                <div id="cpu" class="card-value">—</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">RAM</div>
-                <div id="ram" class="card-value">—</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Disk</div>
-                <div id="disk" class="card-value">—</div>
-            </div>
-
-        </div>
-
-        <br>
-
-        <button onclick="requestStatus()">
-            Refresh Status
-        </button>
-
-    </div>
-
-
-    <!-- OUTPUT -->
-
-    <div class="panel">
-
-        <h2>Connection Output</h2>
-
-        <textarea
-            id="output"
-            readonly
-            placeholder="Messages from your PC will appear here..."
-        ></textarea>
-
-    </div>
+    <img
+        id="screen"
+        draggable="false"
+    >
 
 </div>
 
 
 <script>
 
-let websocket = null;
+
+let socket = null;
+
+let screenWidth = 1;
+
+let screenHeight = 1;
+
+let lastMouseSend = 0;
 
 
 // --------------------------------------------------
-// CONNECT TO PC
+// CONNECT
 // --------------------------------------------------
 
-function connectToPC() {
+function connect() {
 
-    const serverUrl =
-        document.getElementById("serverUrl").value.trim();
+    const server =
+        document
+            .getElementById("serverUrl")
+            .value
+            .trim();
 
     const token =
-        document.getElementById("token").value.trim();
+        document
+            .getElementById("token")
+            .value
+            .trim();
 
 
-    if (!serverUrl) {
-        alert("Enter the Cloudflare Tunnel address.");
+    if (!server) {
+
+        alert("Enter the Cloudflare URL.");
+
         return;
     }
+
 
     if (!token) {
-        alert("Enter your PC control token.");
+
+        alert("Enter your PC token.");
+
         return;
     }
 
 
-    // Convert:
-    // https://example.trycloudflare.com
-    //
-    // into:
-    // wss://example.trycloudflare.com
+    disconnect();
 
-    const websocketUrl =
-        serverUrl.replace(/^https:/, "wss:").replace(/\/$/, "")
+
+    const wsUrl =
+        server
+            .replace(/^https:/, "wss:")
+            .replace(/\/$/, "")
         + "/ws?token="
         + encodeURIComponent(token);
 
 
-    setConnectionStatus("Connecting...", false);
+    setStatus(
+        "Connecting...",
+        false
+    );
 
 
-    try {
-
-        websocket = new WebSocket(websocketUrl);
+    socket = new WebSocket(wsUrl);
 
 
-        websocket.onopen = function() {
-
-            setConnectionStatus("Connected", true);
-
-            addOutput("WebSocket connected.");
-
-        };
+    // Receive both JSON and binary JPEG frames.
+    socket.binaryType = "blob";
 
 
-        websocket.onmessage = function(event) {
+    socket.onopen = function() {
 
-            addOutput("PC: " + event.data);
+        setStatus(
+            "Connected",
+            true
+        );
+
+        document
+            .getElementById("message")
+            .style.display = "none";
+
+    };
+
+
+    socket.onmessage = function(event) {
+
+
+        // JSON message
+        if (typeof event.data === "string") {
 
             try {
 
-                const data = JSON.parse(event.data);
+                const data =
+                    JSON.parse(event.data);
 
-                if (data.type === "status") {
 
-                    updateStatus(data);
+                if (
+                    data.type ===
+                    "screen_info"
+                ) {
+
+                    screenWidth =
+                        data.width;
+
+                    screenHeight =
+                        data.height;
 
                 }
 
-            } catch (error) {
+            }
+            catch (error) {
 
-                console.log("Received non-JSON message.");
+                console.log(error);
 
             }
 
-        };
+            return;
+        }
 
 
-        websocket.onerror = function() {
-
-            addOutput("WebSocket error.");
-
-            setConnectionStatus("Connection error", false);
-
-        };
+        // JPEG image
+        const blob = event.data;
 
 
-        websocket.onclose = function() {
+        const url =
+            URL.createObjectURL(blob);
 
-            addOutput("WebSocket disconnected.");
 
-            setConnectionStatus("Disconnected", false);
+        const image =
+            document.getElementById("screen");
 
-        };
 
-    } catch (error) {
+        const old =
+            image.src;
 
-        addOutput("Connection failed: " + error);
 
-        setConnectionStatus("Connection failed", false);
+        image.src = url;
+
+
+        if (old &&
+            old.startsWith("blob:")
+        ) {
+
+            URL.revokeObjectURL(old);
+
+        }
+
+    };
+
+
+    socket.onerror = function() {
+
+        setStatus(
+            "Connection error",
+            false
+        );
+
+    };
+
+
+    socket.onclose = function() {
+
+        setStatus(
+            "Disconnected",
+            false
+        );
+
+        document
+            .getElementById("message")
+            .style.display = "block";
+
+        document
+            .getElementById("message")
+            .textContent =
+            "Disconnected from PC.";
+
+    };
+
+}
+
+
+// --------------------------------------------------
+// DISCONNECT
+// --------------------------------------------------
+
+function disconnect() {
+
+    if (socket) {
+
+        socket.close();
+
+        socket = null;
 
     }
 
@@ -334,97 +452,430 @@ function connectToPC() {
 
 
 // --------------------------------------------------
-// REQUEST STATUS
+// STATUS
 // --------------------------------------------------
 
-function requestStatus() {
+function setStatus(
+    message,
+    connected
+) {
 
-    if (!websocket ||
-        websocket.readyState !== WebSocket.OPEN) {
+    const element =
+        document.getElementById("status");
 
-        alert("Connect to your PC first.");
+
+    element.textContent =
+        "● " + message;
+
+
+    element.className =
+        connected
+            ? "connected"
+            : "disconnected";
+
+}
+
+
+// --------------------------------------------------
+// SEND JSON
+// --------------------------------------------------
+
+function send(data) {
+
+    if (
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) {
+
         return;
+
     }
 
 
-    websocket.send(
-        JSON.stringify({
-            action: "status"
-        })
+    socket.send(
+        JSON.stringify(data)
     );
 
 }
 
 
 // --------------------------------------------------
-// UPDATE STATUS CARDS
+// MOUSE POSITION
 // --------------------------------------------------
 
-function updateStatus(data) {
+function getMousePosition(event) {
 
-    document.getElementById("computer").textContent =
-        data.computer || "—";
+    const image =
+        document.getElementById("screen");
 
-    document.getElementById("cpu").textContent =
-        data.cpu !== undefined
-            ? data.cpu + "%"
-            : "—";
 
-    document.getElementById("ram").textContent =
-        data.ram !== undefined
-            ? data.ram + "%"
-            : "—";
+    const rect =
+        image.getBoundingClientRect();
 
-    document.getElementById("disk").textContent =
-        data.disk !== undefined
-            ? data.disk + "%"
-            : "—";
+
+    if (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+    ) {
+
+        return null;
+
+    }
+
+
+    const x =
+        (event.clientX - rect.left)
+        * screenWidth
+        / rect.width;
+
+
+    const y =
+        (event.clientY - rect.top)
+        * screenHeight
+        / rect.height;
+
+
+    return {
+        x: Math.round(x),
+        y: Math.round(y)
+    };
 
 }
 
 
 // --------------------------------------------------
-// CONNECTION INDICATOR
+// MOUSE MOVE
 // --------------------------------------------------
 
-function setConnectionStatus(message, connected) {
+document
+    .getElementById("screen")
+    .addEventListener(
+        "mousemove",
+        function(event) {
 
-    const element =
-        document.getElementById("connectionStatus");
+            const now =
+                Date.now();
 
-    element.textContent =
-        connected
-            ? "● " + message
-            : "● " + message;
 
-    element.className =
-        connected
-            ? "status-line online"
-            : "status-line offline";
+            // Don't flood the connection.
+            if (
+                now - lastMouseSend < 25
+            ) {
 
-}
+                return;
+
+            }
+
+
+            lastMouseSend = now;
+
+
+            const position =
+                getMousePosition(event);
+
+
+            if (!position) {
+
+                return;
+
+            }
+
+
+            send({
+
+                action: "mouse_move",
+
+                x: position.x,
+
+                y: position.y,
+
+                screen_width:
+                    screenWidth,
+
+                screen_height:
+                    screenHeight
+
+            });
+
+        }
+    );
 
 
 // --------------------------------------------------
-// OUTPUT LOG
+// MOUSE DOWN
 // --------------------------------------------------
 
-function addOutput(message) {
+document
+    .getElementById("screen")
+    .addEventListener(
+        "mousedown",
+        function(event) {
 
-    const output =
-        document.getElementById("output");
+            event.preventDefault();
 
-    const timestamp =
-        new Date().toLocaleTimeString();
 
-    output.value +=
-        "[" + timestamp + "] " + message + "\n";
+            const position =
+                getMousePosition(event);
 
-    output.scrollTop = output.scrollHeight;
 
-}
+            if (!position) {
+
+                return;
+
+            }
+
+
+            let button =
+                "left";
+
+
+            if (event.button === 1) {
+
+                button = "middle";
+
+            }
+
+            else if (event.button === 2) {
+
+                button = "right";
+
+            }
+
+
+            send({
+
+                action: "mouse_down",
+
+                x: position.x,
+
+                y: position.y,
+
+                button: button,
+
+                screen_width:
+                    screenWidth,
+
+                screen_height:
+                    screenHeight
+
+            });
+
+        }
+    );
+
+
+// --------------------------------------------------
+// MOUSE UP
+// --------------------------------------------------
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "mouseup",
+        function(event) {
+
+            event.preventDefault();
+
+
+            let button =
+                "left";
+
+
+            if (event.button === 1) {
+
+                button = "middle";
+
+            }
+
+            else if (event.button === 2) {
+
+                button = "right";
+
+            }
+
+
+            send({
+
+                action: "mouse_up",
+
+                button: button
+
+            });
+
+        }
+    );
+
+
+// --------------------------------------------------
+// DOUBLE CLICK
+// --------------------------------------------------
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "dblclick",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const position =
+                getMousePosition(event);
+
+
+            if (!position) {
+
+                return;
+
+            }
+
+
+            send({
+
+                action:
+                    "double_click",
+
+                x: position.x,
+
+                y: position.y,
+
+                screen_width:
+                    screenWidth,
+
+                screen_height:
+                    screenHeight
+
+            });
+
+        }
+    );
+
+
+// --------------------------------------------------
+// RIGHT CLICK
+// --------------------------------------------------
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "contextmenu",
+        function(event) {
+
+            event.preventDefault();
+
+        }
+    );
+
+
+// --------------------------------------------------
+// SCROLL
+// --------------------------------------------------
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "wheel",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const amount =
+                Math.round(
+                    -event.deltaY / 100
+                );
+
+
+            send({
+
+                action: "scroll",
+
+                amount:
+                    Math.max(
+                        -10,
+                        Math.min(
+                            10,
+                            amount
+                        )
+                    )
+
+            });
+
+        },
+        {
+            passive: false
+        }
+    );
+
+
+// --------------------------------------------------
+// KEYBOARD
+// --------------------------------------------------
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        // Don't intercept keys while typing
+        // into the connection fields.
+        if (
+            event.target.tagName ===
+            "INPUT"
+        ) {
+
+            return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        send({
+
+            action: "key_down",
+
+            key: event.key
+
+        });
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    function(event) {
+
+        if (
+            event.target.tagName ===
+            "INPUT"
+        ) {
+
+            return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        send({
+
+            action: "key_up",
+
+            key: event.key
+
+        });
+
+    }
+);
+
 
 </script>
 
 </body>
+
 </html>
