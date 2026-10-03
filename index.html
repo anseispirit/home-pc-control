@@ -4,11 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Home PC Remote Desktop</title>
 
@@ -31,168 +27,100 @@ body {
 }
 
 #topbar {
-
     height: 55px;
-
     display: flex;
-
     align-items: center;
-
     gap: 10px;
-
     padding: 8px 12px;
-
     background: #151922;
-
     border-bottom: 1px solid #2a3040;
 }
 
 #serverUrl {
-
     flex: 1;
-
     min-width: 200px;
-
     background: #0b0e14;
-
     color: white;
-
     border: 1px solid #303747;
-
     border-radius: 6px;
-
     padding: 9px;
-
 }
 
 #token {
-
     width: 230px;
-
     background: #0b0e14;
-
     color: white;
-
     border: 1px solid #303747;
-
     border-radius: 6px;
-
     padding: 9px;
-
 }
 
 button {
-
     background: #2563eb;
-
     color: white;
-
     border: none;
-
     border-radius: 6px;
-
     padding: 9px 14px;
-
     cursor: pointer;
-
 }
 
 button:hover {
-
     background: #1d4ed8;
-
 }
 
 #status {
-
     font-size: 13px;
-
     white-space: nowrap;
-
 }
 
 .disconnected {
-
     color: #ef4444;
-
 }
 
 .connected {
-
     color: #22c55e;
-
 }
 
 #viewer {
-
     width: 100vw;
-
     height: calc(100vh - 55px);
-
     display: flex;
-
     justify-content: center;
-
     align-items: center;
-
     background: #000;
-
     overflow: hidden;
-
 }
 
 #screen {
-
     display: block;
-
     max-width: 100%;
-
     max-height: 100%;
-
     width: auto;
-
     height: auto;
-
     object-fit: contain;
-
     user-select: none;
-
     -webkit-user-drag: none;
-
     cursor: default;
-
 }
 
 #message {
-
     position: absolute;
-
     left: 50%;
-
     top: 50%;
-
     transform: translate(-50%, -50%);
-
     color: #9ca3af;
-
     font-size: 18px;
-
     text-align: center;
-
 }
 
 @media (max-width: 700px) {
 
     #token {
-
         width: 150px;
-
     }
 
     #serverUrl {
-
         display: none;
-
     }
 
 }
@@ -203,7 +131,6 @@ button:hover {
 
 
 <body>
-
 
 <div id="topbar">
 
@@ -220,48 +147,40 @@ button:hover {
         placeholder="PC token"
     >
 
-    <button onclick="connect()">
-        Connect
-    </button>
+    <button onclick="connect()">Connect</button>
 
-    <button onclick="disconnect()">
-        Disconnect
-    </button>
+    <button onclick="disconnect()">Disconnect</button>
 
-    <span
-        id="status"
-        class="disconnected"
-    >
-        ● Disconnected
-    </span>
+    <span id="status" class="disconnected">● Disconnected</span>
 
 </div>
 
 
 <div id="viewer">
 
-    <div id="message">
-        Enter your token and click Connect.
-    </div>
+    <div id="message">Enter your token and click Connect.</div>
 
-    <img
-        id="screen"
-        draggable="false"
-    >
+    <img id="screen" draggable="false">
 
 </div>
 
 
 <script>
 
-
 let socket = null;
 
+// Real size of the PC screen (sent by the server in "screen_info").
+// Mouse positions are measured in this space.
 let screenWidth = 1;
-
 let screenHeight = 1;
 
 let lastMouseSend = 0;
+
+// Keys currently held down, so they can be released if the
+// browser window loses focus.
+const heldKeys = new Set();
+
+const screenEl = document.getElementById("screen");
 
 
 // --------------------------------------------------
@@ -270,100 +189,65 @@ let lastMouseSend = 0;
 
 function connect() {
 
-    const server =
-        document
-            .getElementById("serverUrl")
-            .value
-            .trim();
-
-    const token =
-        document
-            .getElementById("token")
-            .value
-            .trim();
-
+    const server = document.getElementById("serverUrl").value.trim();
+    const token = document.getElementById("token").value.trim();
 
     if (!server) {
-
         alert("Enter the Cloudflare URL.");
-
         return;
     }
-
 
     if (!token) {
-
         alert("Enter your PC token.");
-
         return;
     }
 
-
     disconnect();
-
 
     const wsUrl =
         server
             .replace(/^https:/, "wss:")
+            .replace(/^http:/, "ws:")
             .replace(/\/$/, "")
         + "/ws?token="
         + encodeURIComponent(token);
 
+    setStatus("Connecting...", false);
 
-    setStatus(
-        "Connecting...",
-        false
-    );
+    const thisSocket = new WebSocket(wsUrl);
 
+    socket = thisSocket;
 
-    socket = new WebSocket(wsUrl);
-
-
-    // Receive both JSON and binary JPEG frames.
-    socket.binaryType = "blob";
+    thisSocket.binaryType = "blob";
 
 
-    socket.onopen = function() {
+    thisSocket.onopen = function () {
 
-        setStatus(
-            "Connected",
-            true
-        );
+        setStatus("Connected", true);
 
-        document
-            .getElementById("message")
-            .style.display = "none";
+        document.getElementById("message").style.display = "none";
 
     };
 
 
-    socket.onmessage = function(event) {
-
+    thisSocket.onmessage = function (event) {
 
         // JSON message
         if (typeof event.data === "string") {
 
             try {
 
-                const data =
-                    JSON.parse(event.data);
+                const data = JSON.parse(event.data);
 
+                if (data.type === "screen_info") {
 
-                if (
-                    data.type ===
-                    "screen_info"
-                ) {
-
-                    screenWidth =
-                        data.width;
-
-                    screenHeight =
-                        data.height;
+                    // The server sends screen_width / screen_height.
+                    screenWidth = data.screen_width || screenWidth;
+                    screenHeight = data.screen_height || screenHeight;
 
                 }
 
-            }
-            catch (error) {
+            } catch (error) {
 
                 console.log(error);
 
@@ -372,62 +256,44 @@ function connect() {
             return;
         }
 
+        // JPEG frame
+        const url = URL.createObjectURL(event.data);
 
-        // JPEG image
-        const blob = event.data;
+        const old = screenEl.src;
 
+        screenEl.src = url;
 
-        const url =
-            URL.createObjectURL(blob);
-
-
-        const image =
-            document.getElementById("screen");
-
-
-        const old =
-            image.src;
-
-
-        image.src = url;
-
-
-        if (old &&
-            old.startsWith("blob:")
-        ) {
-
+        if (old && old.startsWith("blob:")) {
             URL.revokeObjectURL(old);
-
         }
 
     };
 
 
-    socket.onerror = function() {
+    thisSocket.onerror = function () {
 
-        setStatus(
-            "Connection error",
-            false
-        );
+        if (socket === thisSocket) {
+            setStatus("Connection error", false);
+        }
 
     };
 
 
-    socket.onclose = function() {
+    thisSocket.onclose = function () {
 
-        setStatus(
-            "Disconnected",
-            false
-        );
+        // Ignore the close of an old socket after reconnecting.
+        if (socket !== thisSocket) {
+            return;
+        }
 
-        document
-            .getElementById("message")
-            .style.display = "block";
+        socket = null;
 
-        document
-            .getElementById("message")
-            .textContent =
-            "Disconnected from PC.";
+        setStatus("Disconnected", false);
+
+        const message = document.getElementById("message");
+
+        message.style.display = "block";
+        message.textContent = "Disconnected from PC.";
 
     };
 
@@ -442,9 +308,11 @@ function disconnect() {
 
     if (socket) {
 
-        socket.close();
+        const old = socket;
 
         socket = null;
+
+        old.close();
 
     }
 
@@ -455,23 +323,13 @@ function disconnect() {
 // STATUS
 // --------------------------------------------------
 
-function setStatus(
-    message,
-    connected
-) {
+function setStatus(message, connected) {
 
-    const element =
-        document.getElementById("status");
+    const element = document.getElementById("status");
 
+    element.textContent = "● " + message;
 
-    element.textContent =
-        "● " + message;
-
-
-    element.className =
-        connected
-            ? "connected"
-            : "disconnected";
+    element.className = connected ? "connected" : "disconnected";
 
 }
 
@@ -482,36 +340,31 @@ function setStatus(
 
 function send(data) {
 
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
-
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
         return;
+    }
+
+    // The server routes messages by "type".
+    if (!data.type) {
+
+        data.type = data.action.startsWith("key_")
+            ? "keyboard"
+            : "mouse";
 
     }
 
-
-    socket.send(
-        JSON.stringify(data)
-    );
+    socket.send(JSON.stringify(data));
 
 }
 
 
 // --------------------------------------------------
-// MOUSE POSITION
+// MOUSE HELPERS
 // --------------------------------------------------
 
 function getMousePosition(event) {
 
-    const image =
-        document.getElementById("screen");
-
-
-    const rect =
-        image.getBoundingClientRect();
-
+    const rect = screenEl.getBoundingClientRect();
 
     if (
         event.clientX < rect.left ||
@@ -519,28 +372,23 @@ function getMousePosition(event) {
         event.clientY < rect.top ||
         event.clientY > rect.bottom
     ) {
-
         return null;
-
     }
 
-
-    const x =
-        (event.clientX - rect.left)
-        * screenWidth
-        / rect.width;
-
-
-    const y =
-        (event.clientY - rect.top)
-        * screenHeight
-        / rect.height;
-
-
     return {
-        x: Math.round(x),
-        y: Math.round(y)
+        x: Math.round((event.clientX - rect.left) * screenWidth / rect.width),
+        y: Math.round((event.clientY - rect.top) * screenHeight / rect.height)
     };
+
+}
+
+
+function buttonName(event) {
+
+    if (event.button === 1) return "middle";
+    if (event.button === 2) return "right";
+
+    return "left";
 
 }
 
@@ -549,330 +397,182 @@ function getMousePosition(event) {
 // MOUSE MOVE
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "mousemove",
-        function(event) {
+screenEl.addEventListener("mousemove", function (event) {
 
-            const now =
-                Date.now();
+    const now = Date.now();
 
+    // Don't flood the connection.
+    if (now - lastMouseSend < 25) {
+        return;
+    }
 
-            // Don't flood the connection.
-            if (
-                now - lastMouseSend < 25
-            ) {
+    lastMouseSend = now;
 
-                return;
+    const position = getMousePosition(event);
 
-            }
+    if (!position) {
+        return;
+    }
 
+    send({
+        action: "mouse_move",
+        x: position.x,
+        y: position.y,
+        screen_width: screenWidth,
+        screen_height: screenHeight
+    });
 
-            lastMouseSend = now;
-
-
-            const position =
-                getMousePosition(event);
-
-
-            if (!position) {
-
-                return;
-
-            }
-
-
-            send({
-
-                action: "mouse_move",
-
-                x: position.x,
-
-                y: position.y,
-
-                screen_width:
-                    screenWidth,
-
-                screen_height:
-                    screenHeight
-
-            });
-
-        }
-    );
+});
 
 
 // --------------------------------------------------
 // MOUSE DOWN
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "mousedown",
-        function(event) {
+screenEl.addEventListener("mousedown", function (event) {
 
-            event.preventDefault();
+    event.preventDefault();
 
+    const position = getMousePosition(event);
 
-            const position =
-                getMousePosition(event);
+    if (!position) {
+        return;
+    }
 
+    send({
+        action: "mouse_down",
+        x: position.x,
+        y: position.y,
+        button: buttonName(event),
+        screen_width: screenWidth,
+        screen_height: screenHeight
+    });
 
-            if (!position) {
-
-                return;
-
-            }
-
-
-            let button =
-                "left";
-
-
-            if (event.button === 1) {
-
-                button = "middle";
-
-            }
-
-            else if (event.button === 2) {
-
-                button = "right";
-
-            }
-
-
-            send({
-
-                action: "mouse_down",
-
-                x: position.x,
-
-                y: position.y,
-
-                button: button,
-
-                screen_width:
-                    screenWidth,
-
-                screen_height:
-                    screenHeight
-
-            });
-
-        }
-    );
+});
 
 
 // --------------------------------------------------
 // MOUSE UP
+//
+// Listens on the whole window so the button is still
+// released if you let go outside the picture.
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "mouseup",
-        function(event) {
+window.addEventListener("mouseup", function (event) {
 
-            event.preventDefault();
+    send({
+        action: "mouse_up",
+        button: buttonName(event)
+    });
 
-
-            let button =
-                "left";
-
-
-            if (event.button === 1) {
-
-                button = "middle";
-
-            }
-
-            else if (event.button === 2) {
-
-                button = "right";
-
-            }
-
-
-            send({
-
-                action: "mouse_up",
-
-                button: button
-
-            });
-
-        }
-    );
+});
 
 
 // --------------------------------------------------
 // DOUBLE CLICK
+//
+// Not sent separately: two mouse_down/mouse_up pairs
+// already make a double click on the PC. Sending it too
+// would click extra times.
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "dblclick",
-        function(event) {
+screenEl.addEventListener("dblclick", function (event) {
 
-            event.preventDefault();
+    event.preventDefault();
 
-
-            const position =
-                getMousePosition(event);
-
-
-            if (!position) {
-
-                return;
-
-            }
-
-
-            send({
-
-                action:
-                    "double_click",
-
-                x: position.x,
-
-                y: position.y,
-
-                screen_width:
-                    screenWidth,
-
-                screen_height:
-                    screenHeight
-
-            });
-
-        }
-    );
+});
 
 
 // --------------------------------------------------
-// RIGHT CLICK
+// RIGHT CLICK MENU
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "contextmenu",
-        function(event) {
+screenEl.addEventListener("contextmenu", function (event) {
 
-            event.preventDefault();
+    event.preventDefault();
 
-        }
-    );
+});
 
 
 // --------------------------------------------------
 // SCROLL
 // --------------------------------------------------
 
-document
-    .getElementById("screen")
-    .addEventListener(
-        "wheel",
-        function(event) {
+screenEl.addEventListener("wheel", function (event) {
 
-            event.preventDefault();
+    event.preventDefault();
 
+    // Negative = scroll down, positive = scroll up.
+    let amount = Math.round(-event.deltaY / 100);
 
-            const amount =
-                Math.round(
-                    -event.deltaY / 100
-                );
+    if (amount === 0) {
+        amount = event.deltaY > 0 ? -1 : 1;
+    }
 
+    send({
+        action: "scroll",
+        amount: Math.max(-10, Math.min(10, amount))
+    });
 
-            send({
-
-                action: "scroll",
-
-                amount:
-                    Math.max(
-                        -10,
-                        Math.min(
-                            10,
-                            amount
-                        )
-                    )
-
-            });
-
-        },
-        {
-            passive: false
-        }
-    );
+}, { passive: false });
 
 
 // --------------------------------------------------
 // KEYBOARD
 // --------------------------------------------------
 
-document.addEventListener(
-    "keydown",
-    function(event) {
+document.addEventListener("keydown", function (event) {
 
-        // Don't intercept keys while typing
-        // into the connection fields.
-        if (
-            event.target.tagName ===
-            "INPUT"
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-
-        send({
-
-            action: "key_down",
-
-            key: event.key
-
-        });
-
+    // Don't intercept keys while typing in the connection fields.
+    if (event.target.tagName === "INPUT") {
+        return;
     }
-);
+
+    event.preventDefault();
+
+    heldKeys.add(event.key);
+
+    send({
+        action: "key_down",
+        key: event.key
+    });
+
+});
 
 
-document.addEventListener(
-    "keyup",
-    function(event) {
+document.addEventListener("keyup", function (event) {
 
-        if (
-            event.target.tagName ===
-            "INPUT"
-        ) {
+    if (event.target.tagName === "INPUT") {
+        return;
+    }
 
-            return;
+    event.preventDefault();
 
-        }
+    heldKeys.delete(event.key);
+
+    send({
+        action: "key_up",
+        key: event.key
+    });
+
+});
 
 
-        event.preventDefault();
+// Release held keys if the window loses focus, so nothing sticks.
+window.addEventListener("blur", function () {
 
+    heldKeys.forEach(function (key) {
 
         send({
-
             action: "key_up",
-
-            key: event.key
-
+            key: key
         });
 
-    }
-);
+    });
 
+    heldKeys.clear();
+
+});
 
 </script>
 
