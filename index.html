@@ -51,6 +51,20 @@ button { cursor: pointer; border: 0; color: #fff; font-weight: 600; transition: 
 #lock { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: .4s; box-shadow: inset 0 0 0 4px #ef4444, inset 0 0 90px #ef444466; }
 #lock.on { opacity: 1; }
 #lock span { padding: 12px 22px; border-radius: 12px; background: rgba(30,8,14,.92); border: 1px solid #ef4444; color: #fecaca; font-weight: 600; }
+#stats { position: fixed; top: 0; right: 0; bottom: 0; width: min(350px, 92vw); z-index: 7; padding: 22px 18px; overflow: auto; background: rgba(12,10,28,.92); backdrop-filter: blur(16px); border-left: 1px solid #7c3aed; box-shadow: -10px 0 40px #7c3aed55; transform: translateX(105%); transition: transform .5s cubic-bezier(.2,.9,.3,1.1); }
+#stats.open { transform: none; }
+#stats h2 { margin: 0 0 4px; font-size: 20px; background: linear-gradient(90deg, #a78bfa, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#stats small { color: #8b8aa8; }
+#stats h3 { margin: 18px 0 10px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #67e8f9; }
+.row { margin-bottom: 13px; }
+.row .t { display: flex; justify-content: space-between; font-size: 13px; color: #b6b4d6; }
+.row .t b { color: #fff; }
+.bar { height: 7px; margin-top: 6px; border-radius: 7px; background: #221f45; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 7px; background: #22c55e; transition: width .6s ease, background .6s; }
+.mini { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.mini div { padding: 10px; border-radius: 10px; background: #17143a; border: 1px solid #34315a; font-size: 11px; color: #9b99c0; }
+.mini b { display: block; margin-top: 2px; font-size: 15px; color: #fff; overflow-wrap: anywhere; }
+#statNote { margin-top: 14px; font-size: 12px; color: #fbbf24; }
 </style>
 </head>
 <body>
@@ -83,8 +97,17 @@ button { cursor: pointer; border: 0; color: #fff; font-weight: 600; transition: 
   <div id="bar">
     <span class="dot"></span><span>Connected</span>
     <span class="badge" id="role"></span>
+    <span class="badge">Tab · PC stats</span>
     <button id="fsBtn">⛶ Full screen</button>
     <button id="dcBtn">Disconnect</button>
+  </div>
+  <div id="stats">
+    <h2>PC Stats</h2><small>Press Tab to close</small>
+    <h3>Processor</h3><div id="rowsCpu"></div>
+    <h3>Graphics</h3><div id="rowsGpu"></div>
+    <h3>Memory &amp; storage</h3><div id="rowsMem"></div>
+    <h3>More</h3><div class="mini" id="tiles"></div>
+    <div id="statNote"></div>
   </div>
   <div id="lock"><span>🔒 The host has locked your controls</span></div>
 </div>
@@ -152,6 +175,7 @@ function onMsg(d) {
     $("bar").classList.add("show"); setTimeout(() => $("bar").classList.remove("show"), 2500);
   }
   else if (m.type === "screen_info") { sw = m.screen_width || sw; sh = m.screen_height || sh; }
+  else if (m.type === "stats") renderStats(m);
   else if (m.type === "lock") $("lock").classList.toggle("on", m.locked);
 }
 
@@ -167,6 +191,39 @@ function send(o) {
   if (!socket || socket.readyState !== 1 || !loggedIn) return;
   o.type = o.action.startsWith("key_") ? "keyboard" : "mouse";
   socket.send(JSON.stringify(o));
+}
+
+// Stats panel
+const row = ([id, l]) => `<div class="row"><div class="t"><span>${l}</span><b id="${id}V">–</b></div><div class="bar"><i id="${id}B"></i></div></div>`;
+$("rowsCpu").innerHTML = [["cpu", "CPU usage"], ["cpuT", "CPU temperature"]].map(row).join("");
+$("rowsGpu").innerHTML = [["gpu", "GPU usage"], ["gpuT", "GPU temperature"], ["vram", "GPU memory"]].map(row).join("");
+$("rowsMem").innerHTML = [["ram", "RAM"], ["disk", "Disk C:"]].map(row).join("");
+const TILES = [["tName", "Computer"], ["tGpu", "GPU"], ["tFreq", "CPU speed"], ["tCores", "CPU threads"], ["tPow", "GPU power"], ["tProc", "Processes"], ["tDown", "Download"], ["tUp", "Upload"], ["tUptime", "Uptime"]];
+$("tiles").innerHTML = TILES.map(([id, l]) => `<div>${l}<b id="${id}">–</b></div>`).join("");
+const heat = p => p > 85 ? "#ef4444" : p > 60 ? "#f59e0b" : "#22c55e";
+function bar(id, pct, text) {
+  if (pct == null) { $(id + "V").textContent = "N/A"; $(id + "B").style.width = "0"; return; }
+  $(id + "V").textContent = text; $(id + "B").style.width = Math.min(100, pct) + "%"; $(id + "B").style.background = heat(pct);
+}
+const rate = k => k >= 1024 ? (k / 1024).toFixed(1) + " MB/s" : Math.round(k) + " KB/s";
+function renderStats(m) {
+  bar("cpu", m.cpu, m.cpu + "%");
+  bar("cpuT", m.cpu_temp, m.cpu_temp + "°C");
+  bar("gpu", m.gpu, m.gpu + "%");
+  bar("gpuT", m.gpu_temp, m.gpu_temp + "°C");
+  bar("vram", m.gpu_mem_total ? 100 * m.gpu_mem_used / m.gpu_mem_total : null, m.gpu_mem_total ? (m.gpu_mem_used / 1024).toFixed(1) + " / " + (m.gpu_mem_total / 1024).toFixed(1) + " GB" : "");
+  bar("ram", m.ram, m.ram_used + " / " + m.ram_total + " GB");
+  bar("disk", m.disk, m.disk_used + " / " + m.disk_total + " GB");
+  const u = m.uptime_seconds, set = (id, v) => { $(id).textContent = v; };
+  set("tName", m.computer || "–"); set("tGpu", m.gpu_name || "N/A");
+  set("tFreq", m.cpu_freq ? m.cpu_freq + " MHz" : "N/A"); set("tCores", m.cores ?? "N/A");
+  set("tPow", m.gpu_power != null ? Math.round(m.gpu_power) + " W" : "N/A"); set("tProc", m.procs ?? "N/A");
+  set("tDown", rate(m.net_down)); set("tUp", rate(m.net_up));
+  set("tUptime", Math.floor(u / 86400) + "d " + Math.floor(u % 86400 / 3600) + "h " + Math.floor(u % 3600 / 60) + "m");
+  const notes = [];
+  if (m.cpu_temp == null) notes.push("CPU temperature needs LibreHardwareMonitor running on the PC.");
+  if (m.gpu == null) notes.push("GPU stats need an NVIDIA graphics card.");
+  $("statNote").textContent = notes.join(" ");
 }
 
 // Buttons
@@ -207,10 +264,12 @@ $("screen").addEventListener("wheel", e => {
 // Keyboard
 document.addEventListener("keydown", e => {
   if (!loggedIn || e.target.tagName === "INPUT") return;
+  if (e.key === "Tab") { e.preventDefault(); if (!e.repeat) $("stats").classList.toggle("open"); return; }
   e.preventDefault(); held.add(e.key); send({ action: "key_down", key: e.key });
 });
 document.addEventListener("keyup", e => {
   if (!loggedIn || e.target.tagName === "INPUT") return;
+  if (e.key === "Tab") { e.preventDefault(); return; }
   e.preventDefault(); held.delete(e.key); send({ action: "key_up", key: e.key });
 });
 window.addEventListener("blur", () => { held.forEach(k => send({ action: "key_up", key: k })); held.clear(); });
