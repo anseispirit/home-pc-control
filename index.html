@@ -1,581 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Home PC Remote Desktop</title>
-
+<title>Spirit Remote</title>
 <style>
-
-* {
-    box-sizing: border-box;
-}
-
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: #080a0f;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-}
-
-#topbar {
-    height: 55px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    background: #151922;
-    border-bottom: 1px solid #2a3040;
-}
-
-#serverUrl {
-    flex: 1;
-    min-width: 200px;
-    background: #0b0e14;
-    color: white;
-    border: 1px solid #303747;
-    border-radius: 6px;
-    padding: 9px;
-}
-
-#token {
-    width: 230px;
-    background: #0b0e14;
-    color: white;
-    border: 1px solid #303747;
-    border-radius: 6px;
-    padding: 9px;
-}
-
-button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 9px 14px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #1d4ed8;
-}
-
-#status {
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-.disconnected {
-    color: #ef4444;
-}
-
-.connected {
-    color: #22c55e;
-}
-
-#viewer {
-    width: 100vw;
-    height: calc(100vh - 55px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
-    overflow: hidden;
-}
-
-#screen {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    user-select: none;
-    -webkit-user-drag: none;
-    cursor: default;
-}
-
-#message {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    color: #9ca3af;
-    font-size: 18px;
-    text-align: center;
-}
-
-@media (max-width: 700px) {
-
-    #token {
-        width: 150px;
-    }
-
-    #serverUrl {
-        display: none;
-    }
-
-}
-
+@property --a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; background: #07060f; color: #eef; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg i { position: absolute; width: 55vmax; height: 55vmax; border-radius: 50%; filter: blur(90px); opacity: .35; animation: drift 18s ease-in-out infinite alternate; }
+.bg i:nth-child(1) { background: #7c3aed; top: -20%; left: -10%; }
+.bg i:nth-child(2) { background: #06b6d4; bottom: -25%; right: -10%; animation-delay: -6s; }
+.bg i:nth-child(3) { background: #ec4899; top: 30%; left: 40%; width: 35vmax; height: 35vmax; animation-delay: -12s; }
+@keyframes drift { to { transform: translate(8vw, 6vh) scale(1.2); } }
+.stage { position: fixed; inset: 0; z-index: 1; display: grid; place-items: center; padding: 16px; }
+.card { position: relative; width: min(400px, 100%); padding: 34px 30px; border-radius: 20px; animation: rise .7s cubic-bezier(.2,.9,.3,1.2) both; }
+.card::before { content: ''; position: absolute; inset: -2px; z-index: -2; border-radius: 22px; background: conic-gradient(from var(--a), #7c3aed, #06b6d4, #ec4899, #7c3aed); animation: spin 5s linear infinite; filter: drop-shadow(0 0 14px #7c3aed88); }
+.card::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 20px; background: #0e0c1e; }
+@keyframes spin { to { --a: 360deg; } }
+@keyframes rise { from { opacity: 0; transform: translateY(40px) scale(.94); } }
+.hidden { display: none !important; }
+.out { animation: fall .33s ease forwards; }
+@keyframes fall { to { opacity: 0; transform: translateY(-30px) scale(.96); } }
+h1 { margin: 0 0 4px; font-size: 26px; background: linear-gradient(90deg, #a78bfa, #22d3ee, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+p.sub { margin: 0 0 22px; color: #8b8aa8; font-size: 14px; }
+.steps { display: flex; gap: 6px; margin-bottom: 20px; }
+.steps b { flex: 1; height: 4px; border-radius: 4px; background: #2a2845; }
+.steps b.on { background: linear-gradient(90deg, #7c3aed, #22d3ee); box-shadow: 0 0 10px #22d3ee88; }
+input { width: 100%; margin-bottom: 12px; padding: 13px 14px; border-radius: 10px; border: 1px solid #34315a; background: #0a0918; color: #fff; font-size: 15px; outline: none; transition: .25s; }
+input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px #22d3ee33, 0 0 18px #22d3ee44; }
+button { cursor: pointer; border: 0; color: #fff; font-weight: 600; transition: .25s; }
+.go { width: 100%; padding: 13px; border-radius: 10px; font-size: 15px; background: linear-gradient(90deg, #7c3aed, #06b6d4, #7c3aed); background-size: 200%; box-shadow: 0 6px 24px #7c3aed66; }
+.go:hover { background-position: 100%; transform: translateY(-2px); box-shadow: 0 10px 30px #06b6d466; }
+.go:active { transform: scale(.97); }
+.err { min-height: 20px; margin-top: 10px; color: #fb7185; font-size: 13px; text-align: center; }
+.shake { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-9px); } 75% { transform: translateX(9px); } }
+#viewer { position: fixed; inset: 0; z-index: 2; background: #000; display: grid; place-items: center; animation: fade .6s both; }
+@keyframes fade { from { opacity: 0; } }
+#screen { max-width: 100%; max-height: 100%; user-select: none; -webkit-user-drag: none; }
+#tab { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 4; width: 70px; height: 5px; border-radius: 0 0 8px 8px; background: linear-gradient(90deg, #7c3aed, #22d3ee); }
+#bar { position: fixed; top: 12px; left: 50%; transform: translate(-50%, -90px); z-index: 5; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; background: rgba(14,12,30,.88); backdrop-filter: blur(12px); border: 1px solid #7c3aed99; box-shadow: 0 0 22px #7c3aed55; transition: transform .45s cubic-bezier(.2,.9,.3,1.2); }
+#bar.show, #bar:hover, #tab:hover + #bar { transform: translate(-50%, 0); }
+#bar button { padding: 8px 14px; border-radius: 9px; background: #25224a; border: 1px solid #4c46a0; }
+#bar button:hover { background: #3b3580; box-shadow: 0 0 14px #7c3aed99; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; background: #1d1a3d; border: 1px solid #22d3ee88; color: #67e8f9; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+#lock { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: .4s; box-shadow: inset 0 0 0 4px #ef4444, inset 0 0 90px #ef444466; }
+#lock.on { opacity: 1; }
+#lock span { padding: 12px 22px; border-radius: 12px; background: rgba(30,8,14,.92); border: 1px solid #ef4444; color: #fecaca; font-weight: 600; }
 </style>
-
 </head>
-
-
 <body>
+<div class="bg"><i></i><i></i><i></i></div>
 
-<div id="topbar">
-
-    <input
-        id="serverUrl"
-        type="text"
-        value="https://calibration-asks-herbs-through.trycloudflare.com"
-        placeholder="Cloudflare URL"
-    >
-
-    <input
-        id="token"
-        type="password"
-        placeholder="PC token"
-    >
-
-    <button onclick="connect()">Connect</button>
-
-    <button onclick="disconnect()">Disconnect</button>
-
-    <span id="status" class="disconnected">● Disconnected</span>
-
+<div class="stage" id="stage">
+  <div class="card" id="tokenCard">
+    <div class="steps"><b class="on"></b><b></b></div>
+    <h1>Spirit Remote</h1>
+    <p class="sub">Step 1 — enter the PC access token</p>
+    <input id="token" type="password" placeholder="PC token" autocomplete="off">
+    <button class="go" id="tokenBtn">Continue</button>
+    <div class="err" id="tokenErr"></div>
+  </div>
+  <div class="card hidden" id="loginCard">
+    <div class="steps"><b class="on"></b><b class="on"></b></div>
+    <h1>Welcome</h1>
+    <p class="sub">Step 2 — sign in</p>
+    <input id="user" type="text" placeholder="Username" autocomplete="off">
+    <input id="pass" type="password" placeholder="Password">
+    <button class="go" id="loginBtn">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </div>
 </div>
 
-
-<div id="viewer">
-
-    <div id="message">Enter your token and click Connect.</div>
-
-    <img id="screen" draggable="false">
-
+<div id="viewer" class="hidden">
+  <img id="screen" draggable="false">
+  <div id="tab"></div>
+  <div id="bar">
+    <span class="dot"></span><span>Connected</span>
+    <span class="badge" id="role"></span>
+    <button id="fsBtn">⛶ Full screen</button>
+    <button id="dcBtn">Disconnect</button>
+  </div>
+  <div id="lock"><span>🔒 The host took the mouse — wait for them to press P</span></div>
 </div>
-
 
 <script>
+const SERVER = "https://calibration-asks-herbs-through.trycloudflare.com";
+const $ = id => document.getElementById(id);
+let socket = null, loggedIn = false, sw = 1, sh = 1, lastMove = 0;
+const held = new Set();
 
-let socket = null;
+function swap(from, to) {
+  from.classList.add("out");
+  setTimeout(() => { from.classList.add("hidden"); from.classList.remove("out"); to.classList.remove("hidden"); }, 330);
+}
+function fail(el, msg) {
+  el.textContent = msg;
+  const c = el.closest(".card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+}
 
-// Real size of the PC screen (sent by the server in "screen_info").
-// Mouse positions are measured in this space.
-let screenWidth = 1;
-let screenHeight = 1;
-
-let lastMouseSend = 0;
-
-// Keys currently held down, so they can be released if the
-// browser window loses focus.
-const heldKeys = new Set();
-
-const screenEl = document.getElementById("screen");
-
-
-// --------------------------------------------------
-// CONNECT
-// --------------------------------------------------
-
+// Step 1: token
 function connect() {
-
-    const server = document.getElementById("serverUrl").value.trim();
-    const token = document.getElementById("token").value.trim();
-
-    if (!server) {
-        alert("Enter the Cloudflare URL.");
-        return;
-    }
-
-    if (!token) {
-        alert("Enter your PC token.");
-        return;
-    }
-
-    disconnect();
-
-    const wsUrl =
-        server
-            .replace(/^https:/, "wss:")
-            .replace(/^http:/, "ws:")
-            .replace(/\/$/, "")
-        + "/ws?token="
-        + encodeURIComponent(token);
-
-    setStatus("Connecting...", false);
-
-    const thisSocket = new WebSocket(wsUrl);
-
-    socket = thisSocket;
-
-    thisSocket.binaryType = "blob";
-
-
-    thisSocket.onopen = function () {
-
-        setStatus("Connected", true);
-
-        document.getElementById("message").style.display = "none";
-
-    };
-
-
-    thisSocket.onmessage = function (event) {
-
-        // JSON message
-        if (typeof event.data === "string") {
-
-            try {
-
-                const data = JSON.parse(event.data);
-
-                if (data.type === "screen_info") {
-
-                    // The server sends screen_width / screen_height.
-                    screenWidth = data.screen_width || screenWidth;
-                    screenHeight = data.screen_height || screenHeight;
-
-                }
-
-            } catch (error) {
-
-                console.log(error);
-
-            }
-
-            return;
-        }
-
-        // JPEG frame
-        const url = URL.createObjectURL(event.data);
-
-        const old = screenEl.src;
-
-        screenEl.src = url;
-
-        if (old && old.startsWith("blob:")) {
-            URL.revokeObjectURL(old);
-        }
-
-    };
-
-
-    thisSocket.onerror = function () {
-
-        if (socket === thisSocket) {
-            setStatus("Connection error", false);
-        }
-
-    };
-
-
-    thisSocket.onclose = function () {
-
-        // Ignore the close of an old socket after reconnecting.
-        if (socket !== thisSocket) {
-            return;
-        }
-
-        socket = null;
-
-        setStatus("Disconnected", false);
-
-        const message = document.getElementById("message");
-
-        message.style.display = "block";
-        message.textContent = "Disconnected from PC.";
-
-    };
-
+  const token = $("token").value.trim();
+  if (!token) return fail($("tokenErr"), "Enter the token.");
+  $("tokenErr").textContent = "Checking…";
+  closeSocket();
+  const s = socket = new WebSocket(SERVER.replace(/^http/, "ws") + "/ws?token=" + encodeURIComponent(token));
+  s.binaryType = "blob";
+  s.onopen = () => { $("tokenErr").textContent = ""; swap($("tokenCard"), $("loginCard")); setTimeout(() => $("user").focus(), 450); };
+  s.onmessage = e => onMsg(e.data);
+  s.onclose = () => {
+    if (socket !== s) return;
+    socket = null;
+    if (loggedIn) backToStart("Disconnected from PC.");
+    else if (!$("loginCard").classList.contains("hidden")) backToStart("Session closed. Start again.");
+    else fail($("tokenErr"), "Wrong token, or the PC is offline.");
+  };
 }
 
-
-// --------------------------------------------------
-// DISCONNECT
-// --------------------------------------------------
-
-function disconnect() {
-
-    if (socket) {
-
-        const old = socket;
-
-        socket = null;
-
-        old.close();
-
-    }
-
+// Step 2: login (checked by the server, not by this page)
+function login() {
+  if (!socket || socket.readyState !== 1) return fail($("loginErr"), "Not connected.");
+  socket.send(JSON.stringify({ type: "login", username: $("user").value, password: $("pass").value }));
 }
 
-
-// --------------------------------------------------
-// STATUS
-// --------------------------------------------------
-
-function setStatus(message, connected) {
-
-    const element = document.getElementById("status");
-
-    element.textContent = "● " + message;
-
-    element.className = connected ? "connected" : "disconnected";
-
+function onMsg(d) {
+  if (typeof d !== "string") {
+    const url = URL.createObjectURL(d), old = $("screen").src;
+    $("screen").src = url;
+    if (old.startsWith("blob:")) URL.revokeObjectURL(old);
+    return;
+  }
+  let m; try { m = JSON.parse(d); } catch { return; }
+  if (m.type === "login_failed") fail($("loginErr"), "Wrong username or password.");
+  else if (m.type === "login_ok") {
+    loggedIn = true;
+    $("role").textContent = m.role === "guest" ? "Guest" : "Spirit";
+    $("stage").classList.add("hidden"); $("viewer").classList.remove("hidden");
+    $("bar").classList.add("show"); setTimeout(() => $("bar").classList.remove("show"), 2500);
+  }
+  else if (m.type === "screen_info") { sw = m.screen_width || sw; sh = m.screen_height || sh; }
+  else if (m.type === "lock") $("lock").classList.toggle("on", m.locked);
 }
 
-
-// --------------------------------------------------
-// SEND JSON
-// --------------------------------------------------
-
-function send(data) {
-
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-        return;
-    }
-
-    // The server routes messages by "type".
-    if (!data.type) {
-
-        data.type = data.action.startsWith("key_")
-            ? "keyboard"
-            : "mouse";
-
-    }
-
-    socket.send(JSON.stringify(data));
-
+function closeSocket() { if (socket) { const o = socket; socket = null; o.close(); } }
+function backToStart(msg) {
+  loggedIn = false; $("lock").classList.remove("on");
+  if (document.fullscreenElement) document.exitFullscreen();
+  $("viewer").classList.add("hidden"); $("stage").classList.remove("hidden");
+  $("loginCard").classList.add("hidden"); $("tokenCard").classList.remove("hidden");
+  $("tokenErr").textContent = msg || ""; $("pass").value = ""; $("loginErr").textContent = "";
+}
+function send(o) {
+  if (!socket || socket.readyState !== 1 || !loggedIn) return;
+  o.type = o.action.startsWith("key_") ? "keyboard" : "mouse";
+  socket.send(JSON.stringify(o));
 }
 
+// Buttons
+$("tokenBtn").onclick = connect;
+$("loginBtn").onclick = login;
+$("token").onkeydown = e => { if (e.key === "Enter") connect(); };
+$("user").onkeydown = $("pass").onkeydown = e => { if (e.key === "Enter") login(); };
+$("dcBtn").onclick = () => { closeSocket(); backToStart("Disconnected."); };
+$("fsBtn").onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else $("viewer").requestFullscreen().catch(() => {});
+};
+document.onfullscreenchange = () => { $("fsBtn").textContent = document.fullscreenElement ? "⛶ Exit full screen" : "⛶ Full screen"; };
 
-// --------------------------------------------------
-// MOUSE HELPERS
-// --------------------------------------------------
-
-function getMousePosition(event) {
-
-    const rect = screenEl.getBoundingClientRect();
-
-    if (
-        event.clientX < rect.left ||
-        event.clientX > rect.right ||
-        event.clientY < rect.top ||
-        event.clientY > rect.bottom
-    ) {
-        return null;
-    }
-
-    return {
-        x: Math.round((event.clientX - rect.left) * screenWidth / rect.width),
-        y: Math.round((event.clientY - rect.top) * screenHeight / rect.height)
-    };
-
+// Mouse
+function pos(e) {
+  const r = $("screen").getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return null;
+  return { x: Math.round((e.clientX - r.left) * sw / r.width), y: Math.round((e.clientY - r.top) * sh / r.height) };
 }
-
-
-function buttonName(event) {
-
-    if (event.button === 1) return "middle";
-    if (event.button === 2) return "right";
-
-    return "left";
-
-}
-
-
-// --------------------------------------------------
-// MOUSE MOVE
-// --------------------------------------------------
-
-screenEl.addEventListener("mousemove", function (event) {
-
-    const now = Date.now();
-
-    // Don't flood the connection.
-    if (now - lastMouseSend < 25) {
-        return;
-    }
-
-    lastMouseSend = now;
-
-    const position = getMousePosition(event);
-
-    if (!position) {
-        return;
-    }
-
-    send({
-        action: "mouse_move",
-        x: position.x,
-        y: position.y,
-        screen_width: screenWidth,
-        screen_height: screenHeight
-    });
-
+const btn = e => e.button === 1 ? "middle" : e.button === 2 ? "right" : "left";
+$("screen").addEventListener("mousemove", e => {
+  const n = Date.now(); if (n - lastMove < 25) return; lastMove = n;
+  const p = pos(e); if (p) send({ action: "mouse_move", x: p.x, y: p.y, screen_width: sw, screen_height: sh });
 });
-
-
-// --------------------------------------------------
-// MOUSE DOWN
-// --------------------------------------------------
-
-screenEl.addEventListener("mousedown", function (event) {
-
-    event.preventDefault();
-
-    const position = getMousePosition(event);
-
-    if (!position) {
-        return;
-    }
-
-    send({
-        action: "mouse_down",
-        x: position.x,
-        y: position.y,
-        button: buttonName(event),
-        screen_width: screenWidth,
-        screen_height: screenHeight
-    });
-
+$("screen").addEventListener("mousedown", e => {
+  e.preventDefault(); const p = pos(e);
+  if (p) send({ action: "mouse_down", x: p.x, y: p.y, button: btn(e), screen_width: sw, screen_height: sh });
 });
-
-
-// --------------------------------------------------
-// MOUSE UP
-//
-// Listens on the whole window so the button is still
-// released if you let go outside the picture.
-// --------------------------------------------------
-
-window.addEventListener("mouseup", function (event) {
-
-    send({
-        action: "mouse_up",
-        button: buttonName(event)
-    });
-
-});
-
-
-// --------------------------------------------------
-// DOUBLE CLICK
-//
-// Not sent separately: two mouse_down/mouse_up pairs
-// already make a double click on the PC. Sending it too
-// would click extra times.
-// --------------------------------------------------
-
-screenEl.addEventListener("dblclick", function (event) {
-
-    event.preventDefault();
-
-});
-
-
-// --------------------------------------------------
-// RIGHT CLICK MENU
-// --------------------------------------------------
-
-screenEl.addEventListener("contextmenu", function (event) {
-
-    event.preventDefault();
-
-});
-
-
-// --------------------------------------------------
-// SCROLL
-// --------------------------------------------------
-
-screenEl.addEventListener("wheel", function (event) {
-
-    event.preventDefault();
-
-    // Negative = scroll down, positive = scroll up.
-    let amount = Math.round(-event.deltaY / 100);
-
-    if (amount === 0) {
-        amount = event.deltaY > 0 ? -1 : 1;
-    }
-
-    send({
-        action: "scroll",
-        amount: Math.max(-10, Math.min(10, amount))
-    });
-
+window.addEventListener("mouseup", e => send({ action: "mouse_up", button: btn(e) }));
+$("screen").addEventListener("contextmenu", e => e.preventDefault());
+$("screen").addEventListener("wheel", e => {
+  e.preventDefault();
+  const a = Math.round(-e.deltaY / 100) || (e.deltaY > 0 ? -1 : 1);
+  send({ action: "scroll", amount: Math.max(-10, Math.min(10, a)) });
 }, { passive: false });
 
-
-// --------------------------------------------------
-// KEYBOARD
-// --------------------------------------------------
-
-document.addEventListener("keydown", function (event) {
-
-    // Don't intercept keys while typing in the connection fields.
-    if (event.target.tagName === "INPUT") {
-        return;
-    }
-
-    event.preventDefault();
-
-    heldKeys.add(event.key);
-
-    send({
-        action: "key_down",
-        key: event.key
-    });
-
+// Keyboard
+document.addEventListener("keydown", e => {
+  if (!loggedIn || e.target.tagName === "INPUT") return;
+  e.preventDefault(); held.add(e.key); send({ action: "key_down", key: e.key });
 });
-
-
-document.addEventListener("keyup", function (event) {
-
-    if (event.target.tagName === "INPUT") {
-        return;
-    }
-
-    event.preventDefault();
-
-    heldKeys.delete(event.key);
-
-    send({
-        action: "key_up",
-        key: event.key
-    });
-
+document.addEventListener("keyup", e => {
+  if (!loggedIn || e.target.tagName === "INPUT") return;
+  e.preventDefault(); held.delete(e.key); send({ action: "key_up", key: e.key });
 });
-
-
-// Release held keys if the window loses focus, so nothing sticks.
-window.addEventListener("blur", function () {
-
-    heldKeys.forEach(function (key) {
-
-        send({
-            action: "key_up",
-            key: key
-        });
-
-    });
-
-    heldKeys.clear();
-
-});
-
+window.addEventListener("blur", () => { held.forEach(k => send({ action: "key_up", key: k })); held.clear(); });
 </script>
-
 </body>
-
 </html>
