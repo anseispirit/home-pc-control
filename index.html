@@ -60,7 +60,8 @@ button { cursor: pointer; border: 0; color: #fff; font-weight: 600; transition: 
   <div class="card" id="tokenCard">
     <div class="steps"><b class="on"></b><b></b></div>
     <h1>Spirit Remote</h1>
-    <p class="sub">Step 1 — enter the PC access token</p>
+    <p class="sub">Step 1 — paste the PC link and token</p>
+    <input id="link" type="text" placeholder="Cloudflare link (https://xxxx.trycloudflare.com)" autocomplete="off" spellcheck="false">
     <input id="token" type="password" placeholder="PC token" autocomplete="off">
     <button class="go" id="tokenBtn">Continue</button>
     <div class="err" id="tokenErr"></div>
@@ -89,8 +90,10 @@ button { cursor: pointer; border: 0; color: #fff; font-weight: 600; transition: 
 </div>
 
 <script>
-const SERVER = "https://calibration-asks-herbs-through.trycloudflare.com";
+const DEFAULT_LINK = "https://calibration-asks-herbs-through.trycloudflare.com";
+let SERVER = DEFAULT_LINK;
 const $ = id => document.getElementById(id);
+try { $("link").value = localStorage.getItem("pcLink") || DEFAULT_LINK; } catch { $("link").value = DEFAULT_LINK; }
 let socket = null, loggedIn = false, sw = 1, sh = 1, lastMove = 0;
 const held = new Set();
 
@@ -105,6 +108,11 @@ function fail(el, msg) {
 
 // Step 1: token
 function connect() {
+  let link = $("link").value.trim().replace(/\/+$/, "");
+  if (!link) return fail($("tokenErr"), "Paste the Cloudflare link.");
+  if (!/^https?:\/\//i.test(link)) link = "https://" + link;
+  SERVER = link;
+  try { localStorage.setItem("pcLink", link); } catch {}
   const token = $("token").value.trim();
   if (!token) return fail($("tokenErr"), "Enter the token.");
   $("tokenErr").textContent = "Checking…";
@@ -118,7 +126,7 @@ function connect() {
     socket = null;
     if (loggedIn) backToStart("Disconnected from PC.");
     else if (!$("loginCard").classList.contains("hidden")) backToStart("Session closed. Start again.");
-    else fail($("tokenErr"), "Wrong token, or the PC is offline.");
+    else fail($("tokenErr"), "Wrong token, or the link is old / the PC is offline.");
   };
 }
 
@@ -164,7 +172,7 @@ function send(o) {
 // Buttons
 $("tokenBtn").onclick = connect;
 $("loginBtn").onclick = login;
-$("token").onkeydown = e => { if (e.key === "Enter") connect(); };
+$("link").onkeydown = $("token").onkeydown = e => { if (e.key === "Enter") connect(); };
 $("user").onkeydown = $("pass").onkeydown = e => { if (e.key === "Enter") login(); };
 $("dcBtn").onclick = () => { closeSocket(); backToStart("Disconnected."); };
 $("fsBtn").onclick = () => {
